@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha mongo/**/*.test.js",
-    "start": "nodemon server.js",
+    "start": "node mongo/index.js",
     "test-watch": "nodemon --exec npm test"
+  },
+  "engines": {
+    "node": "6.9.4"
   },
   "author": "tuhin",
   "license": "ISC",
