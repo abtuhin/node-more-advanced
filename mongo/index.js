@@ -1,6 +1,7 @@
-var express = require('express');
-var bodyParser = require('body-parser'); // take json and convert to object based on request
-var {ObjectID} = require('mongodb');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser'); // take json and convert to object based on request
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose.js');
 var {Todo} = require('./models/todo.js');
@@ -11,6 +12,7 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+//Routes for creating new todo
 app.post('/todos', (req, res) => {
   // console.log(req.body);
   var todo = new Todo({
@@ -25,6 +27,7 @@ app.post('/todos', (req, res) => {
 
 });
 
+//Route for fetching all todos
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
     res.send({todos});
@@ -33,6 +36,7 @@ app.get('/todos', (req, res) => {
   });
 });
 
+//Route for fetching todo targetting by id
 app.get('/todos/:id', (req, res) => {
   var id = req.params.id;
   // validate id using isValid
@@ -51,6 +55,7 @@ app.get('/todos/:id', (req, res) => {
 
 });
 
+//Route for deleting todo targetting by  id
 app.delete('/todos/:id', (req,res) => {
   var id = req.params.id;
   if(!ObjectID.isValid(id)){
@@ -66,6 +71,33 @@ app.delete('/todos/:id', (req,res) => {
     res.status(400).send();
   });
 
+});
+
+//Route for updating todo targetting by id
+app.patch('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  var body = _.pick(req.body, ['text', 'completed']);
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    if (!todo) {
+      return res.status(404).send();
+    }
+
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
+  })
 });
 
 app.listen(port, () => {
